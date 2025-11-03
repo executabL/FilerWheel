@@ -1,0 +1,13 @@
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+
+app = FastAPI(title="Security Station Stub")
+
+@app.get("/health")
+async def health():
+    return {"status":"ok"}
+
+@app.post("/api/intake-event")
+async def intake_event(req: Request):
+    data = await req.json()
+    return JSONResponse({"received": True, "level": data.get("level","unknown")})
