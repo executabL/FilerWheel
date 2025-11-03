@@ -1,0 +1,18 @@
+mkdir -p ~/chaosbox/html
+cat > ~/chaosbox/html/index.html <<'EOF'
+<!DOCTYPE html>
+<html><body style="font-family:monospace;background:#111;color:#0f0;">
+<h1>ChaosBox</h1>
+<pre id="log">Starting...</pre>
+<script>
+setInterval(() => {
+  fetch('status.txt?' + Date.now())
+    .then(r => r.text())
+    .then(t => document.getElementById('log').innerText = t)
+    .catch(() => document.getElementById('log').innerText = 'No status yet');
+}, 2000);
+</script>
+</body></html>
+EOF
+
+echo "ChaosBox ready" > ~/chaosbox/html/status.txt
