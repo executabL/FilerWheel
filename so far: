@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  healer:
+    image: alpine:latest
+    volumes:
+      - ./data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: >
+      sh -c "
+        apk add --no-cache docker-cli curl;
+        while true; do
+          for s in guard scanner ui watcher; do
+            if ! docker ps --format '{{.Names}}' | grep -q ^\$\$s\$; then
+              echo 'Healing \$\$s...';
+              docker start \$\$s 2>/dev/null || docker compose up -d \$\$s;
+            fi;
+          done;
+          sleep 12;
+        done
+      "
+    depends_on:
+      - guard
+      - scanner
+      - ui
+      - watcher
+
+  guard:
+    image: alpine:latest
+    volumes:
+      - ./data:/data
+    command: sh -c "while true; do echo 'Guarding files...'; sleep 5; done"
+
+  scanner:
+    image: alpine:latest
+    command: sh -c "while true; do echo 'Scanning for threats...'; sleep 7; done"
+
+  ui:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+
+  watcher:
+    image: alpine:latest
+    volumes:
+      - ./data:/data
+    command: >
+      sh -c "
+        apk add --no-cache inotify-tools;
+        echo 'Watching /data for new files...';
+        inotifywait -m /data -e create -e moved_to |
+        while read path action file; do
+          echo \"QUARANTINE: \$file\";
+          mkdir -p /data/quarantine;
+          mv \"/data/\$file\" \"/data/quarantine/\$file\";
+          echo \"File quarantined: \$file\" > /usr/share/nginx/html/status.txt;
+        done
+      "
