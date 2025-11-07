@@ -1,0 +1,9 @@
+{
+  "type": "restore",
+  "target_worker": "analysis-02",
+  "source_snapshot_hash": "sha256:deadbeef...",
+  "reason": "process_crash_detected",
+  "policy_level": "medium", // low/medium/high
+  "metadata_signature": "base64(metadata_sig)",
+  "supervisor_signature": "base64(supervisor_sig)"
+}
