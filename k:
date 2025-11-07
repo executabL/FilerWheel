@@ -1,0 +1,10 @@
+{
+  "ts": "2025-10-25T12:45:30Z",
+  "event": "restore_attempt",
+  "actor_role": "supervisor",
+  "target_worker": "analysis-02",
+  "resource_hash": "sha256:deadbeef...", // CAS id only, no path/user
+  "policy_level": "medium",
+  "outcome": "success", // success/failure/pending
+  "details": "atomic_swap_complete"
+}
