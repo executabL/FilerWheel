@@ -1,0 +1,8 @@
+{
+  "type": "admin_approve",
+  "action_id": "restore-2025-10-25-1234",
+  "decision": "approve",
+  "admin_pubkey": "base64(ed25519_pubkey)",
+  "signature": "base64(admin_sig)",
+  "comment": "approve high-risk restore per policy"
+}
