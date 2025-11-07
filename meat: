@@ -1,0 +1,259 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+FilerWheel — secure file ingest / storage / containment engine
+Platform: Termux / Android (Linux environment)
+Language: Python 3.x
+Style: minimal, modular, lean, with light thematic touches
+"""
+
+import os
+import sys
+import shutil
+import subprocess
+import signal
+import threading
+import time
+from datetime import datetime
+from pathlib import Path
+import json
+import uuid
+import tempfile
+
+# ====== Configuration & Globals ======
+
+APP_NAME = "FilerWheel"
+VERSION = "0.1"
+BASE_DIR = Path.home() / ".filerwheel"
+TIERS = {
+    "clean": BASE_DIR / "tier_clean",
+    "suspect": BASE_DIR / "tier_suspect",
+    "quarantine": BASE_DIR / "tier_quarantine"
+}
+LOG_FILE = BASE_DIR / "filerwheel.log"
+KILL_SWITCH_FLAG = BASE_DIR / "kill_switch.activated"
+READONLY_MODE = False  # when true, no modifications allowed
+
+# You can override the container backend (chroot, firejail, docker) here:
+CONTAINER_CMD_TEMPLATE = "proot -b {root} -w {workdir} {cmd}"  # proot is common in Termux
+
+# CLI style: minimal border separators
+SEPARATOR = "-" * 60
+
+
+# ====== Utility & Logging ======
+
+def ensure_dirs():
+    """Ensure the base directories exist."""
+    BASE_DIR.mkdir(parents=True, exist_ok=True)
+    for tier in TIERS.values():
+        tier.mkdir(parents=True, exist_ok=True)
+
+def log(msg: str):
+    """Append a timestamped log message to the logfile."""
+    ts = datetime.utcnow().isoformat()
+    with open(LOG_FILE, "a") as f:
+        f.write(f"{ts} | {msg}\n")
+
+def fatal(msg: str, exit_code=1):
+    """Log and exit immediately."""
+    log(f"FATAL: {msg}")
+    print(f"[ERROR] {msg}", file=sys.stderr)
+    sys.exit(exit_code)
+
+def check_kill_switch():
+    """If kill switch is activated, refuse to run further operations."""
+    if KILL_SWITCH_FLAG.exists():
+        fatal("Kill switch is active. Exiting.")
+
+
+# ====== Core File Intake & Tier Routing ======
+
+def classify_file(filepath: Path) -> str:
+    """
+    Return a tier label: 'clean' | 'suspect' | 'quarantine'
+    Default naive logic; substitute your own rules or ML later.
+    """
+    # example heuristics:
+    name = filepath.name.lower()
+    if name.endswith((".exe", ".dll", ".bin", ".scr")):
+        return "quarantine"
+    if name.endswith((".txt", ".md", ".cfg", ".json", ".csv", ".log")):
+        return "clean"
+    # fallback:
+    return "suspect"
+
+def move_to_tier(src: Path, tier: str) -> Path:
+    """Move or copy file into the appropriate tier."""
+    dest = TIERS[tier] / src.name
+    if READONLY_MODE:
+        # do not modify; maybe just log
+        log(f"READONLY: would move {src} → {tier}")
+        return dest
+    shutil.move(str(src), str(dest))
+    log(f"Moved {src} → {tier}")
+    return dest
+
+def ingest(filepath: Path):
+    """Take a file into FilerWheel, classify, and route it."""
+    check_kill_switch()
+    if not filepath.exists():
+        fatal(f"File not found: {filepath}")
+
+    tier = classify_file(filepath)
+    moved = move_to_tier(filepath, tier)
+    print(f"Ingested {filepath} → {tier}")
+    log(f"Ingest: {filepath} → {tier}")
+
+    # Optionally, you can trigger an isolated scan in container:
+    if tier != "clean":
+        result = run_in_container_scan(moved)
+        print(f"Scan result: {result}")
+        # If found malicious, escalate to quarantine:
+        if result.get("malicious", False):
+            move_to_tier(moved, "quarantine")
+            print(f"Escalated to quarantine: {moved.name}")
+            log(f"Escalated: {moved} → quarantine")
+
+# ====== Container / Sandbox Logic ======
+
+def run_in_container_scan(filepath: Path) -> dict:
+    """
+    Run scanning or inspection of the file inside sandbox/container.
+    Returns a dict like {"malicious": Bool, "notes": str}
+    """
+    check_kill_switch()
+    # Example: run a virus scanner, or static analysis tool, inside proot.
+    cmd = f"clamscan {filepath}"  # example command
+    template = CONTAINER_CMD_TEMPLATE.format(root=BASE_DIR, workdir=str(filepath.parent), cmd=cmd)
+    try:
+        proc = subprocess.run(template, shell=True, capture_output=True, text=True, timeout=60)
+        stdout = proc.stdout
+        stderr = proc.stderr
+        code = proc.returncode
+        # naive check:
+        malicious = (code != 0)
+        return {"malicious": malicious, "stdout": stdout, "stderr": stderr}
+    except subprocess.TimeoutExpired:
+        return {"malicious": False, "notes": "scan timeout"}
+
+# ====== Kill-Switch Interface ======
+
+def activate_kill_switch():
+    """Permanently stops file operations until reset."""
+    KILL_SWITCH_FLAG.write_text("activated")
+    log("Kill switch ACTIVATED")
+    print("Kill switch activated.")
+
+def deactivate_kill_switch():
+    """Reset the kill switch (manual control)."""
+    if KILL_SWITCH_FLAG.exists():
+        KILL_SWITCH_FLAG.unlink()
+        log("Kill switch DEACTIVATED")
+        print("Kill switch deactivated.")
+
+# ====== Command-Line Interface ======
+
+def show_header():
+    print(SEPARATOR)
+    print(f"{APP_NAME} v{VERSION}")
+    print("Tiered Cold Storage & Threat Museum Interface")
+    print(SEPARATOR)
+
+def show_help():
+    print("Commands:")
+    print("  ingest <filepath>        — ingest a file into FilerWheel")
+    print("  ls <tier>                — list files in a tier (clean, suspect, quarantine)")
+    print("  cat <tier> <filename>    — view file contents (read-only)")
+    print("  activate_kill            — enable kill switch")
+    print("  deactivate_kill          — disable kill switch")
+    print("  status                   — show system status")
+    print("  exit                     — quit")
+
+def cmd_ls(args):
+    if len(args) != 1:
+        print("Usage: ls <tier>")
+        return
+    tier = args[0]
+    if tier not in TIERS:
+        print("Invalid tier. Choose: clean, suspect, quarantine")
+        return
+    for f in TIERS[tier].iterdir():
+        print("  " + f.name)
+
+def cmd_cat(args):
+    if len(args) != 2:
+        print("Usage: cat <tier> <filename>")
+        return
+    tier, fname = args
+    if tier not in TIERS:
+        print("Invalid tier")
+        return
+    path = TIERS[tier] / fname
+    if not path.exists():
+        print("File not found")
+        return
+    # read-only viewing
+    try:
+        with open(path, "r", errors="ignore") as f:
+            print(f.read(1024 * 4))  # cap output
+    except Exception as e:
+        print("[READ ERROR]", e)
+
+def cmd_ingest(args):
+    if len(args) != 1:
+        print("Usage: ingest <filepath>")
+        return
+    p = Path(args[0])
+    ingest(p)
+
+def cmd_status(args):
+    print("System status:")
+    ks = "ON" if KILL_SWITCH_FLAG.exists() else "OFF"
+    print(f"  Kill switch: {ks}")
+    print(f"  Read-only: {'YES' if READONLY_MODE else 'NO'}")
+    for t, p in TIERS.items():
+        cnt = len(list(p.iterdir()))
+        print(f"  Tier {t}: {cnt} files")
+
+def parse_and_execute(line: str):
+    parts = line.strip().split()
+    if not parts:
+        return
+    cmd = parts[0]
+    args = parts[1:]
+    if cmd == "help":
+        show_help()
+    elif cmd == "ingest":
+        cmd_ingest(args)
+    elif cmd == "ls":
+        cmd_ls(args)
+    elif cmd == "cat":
+        cmd_cat(args)
+    elif cmd == "activate_kill":
+        activate_kill_switch()
+    elif cmd == "deactivate_kill":
+        deactivate_kill_switch()
+    elif cmd == "status":
+        cmd_status(args)
+    elif cmd == "exit":
+        sys.exit(0)
+    else:
+        print("Unknown command. Type ‘help’.")
+
+def main_loop():
+    ensure_dirs()
+    check_kill_switch()
+    show_header()
+    show_help()
+    while True:
+        try:
+            line = input("fw> ")
+        except (EOFError, KeyboardInterrupt):
+            print("\nExiting.")
+            break
+        parse_and_execute(line)
+
+if __name__ == "__main__":
+    main_loop()
