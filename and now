@@ -1,0 +1,21 @@
+@startuml
+skinparam backgroundColor #0b0b0b
+skinparam componentStyle rectangle
+actor "User (Observer)" as U
+actor "Admin" as A
+
+component "Supervisor API" as S
+component "Flask/TUI Interface" as F
+component "WebSocket Stream" as W
+component "Container Workers" as CW
+database "CAS + Metadata" as DB
+
+U -[hidden]-> F
+U --> F : Read-only dashboard
+A --> F : Authenticated actions (approve)
+F --> S : REST / UDS calls (localhost only)
+S --> CW : Control, heartbeat
+S --> DB : Read metadata / write logs
+S --> W : Emit live status (JSON stream)
+F --> W : Subscribe & render
+@enduml
