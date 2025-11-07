@@ -1,0 +1,32 @@
+-- Minimal CAS reference table
+CREATE TABLE cas_objects (
+    hash TEXT PRIMARY KEY,
+    size_bytes INTEGER NOT NULL,
+    mime_type TEXT,
+    created_at TEXT NOT NULL,
+    verified_at TEXT,
+    signature TEXT,           -- Ed25519 signature of blob (optional)
+    classification TEXT,       -- e.g., 'clean', 'suspicious', 'malware'
+    threat_score INTEGER,      -- 0-100 scale
+    origin_container TEXT,     -- 'ingest-01' etc., never user data
+    museum_flag INTEGER DEFAULT 0, -- 1 if quarantined
+    notes TEXT                 -- short admin/system note (no PII)
+);
+
+-- Snapshot metadata (for worker states)
+CREATE TABLE snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    worker_id TEXT NOT NULL,
+    state_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    signature TEXT NOT NULL,
+    policy_level TEXT NOT NULL,
+    FOREIGN KEY(state_hash) REFERENCES cas_objects(hash)
+);
+
+-- Audit digest table (log digests only, not log content)
+CREATE TABLE log_digests (
+    date TEXT PRIMARY KEY,
+    sha256_digest TEXT NOT NULL,
+    verified INTEGER DEFAULT 0
+);
