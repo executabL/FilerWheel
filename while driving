@@ -1,0 +1,8 @@
+def verify_snapshot(snapshot_id):
+    snap = db.fetch_snapshot(snapshot_id)
+    if not verify_signature(snap.state_hash, snap.signature, metadata_pubkey):
+        raise IntegrityError("bad snapshot signature")
+    blob = fetch_blob(snap.state_hash)
+    if sha256(blob) != snap.state_hash:
+        raise IntegrityError("hash mismatch")
+    return True
