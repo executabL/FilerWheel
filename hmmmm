@@ -1,0 +1,89 @@
+# GOOD: parameterized query
+cur.execute("SELECT id,filename FROM files WHERE owner_id = %s AND tag = %s", (owner_id, tag))
+// GOOD: placeholders ($1, $2) for Postgres
+row := db.QueryRow("SELECT id, filename FROM files WHERE owner_id=$1 AND tag=$2", ownerID, tag)// mysql2: use ? placeholders
+await db.execute("INSERT INTO logs (file_id, event) VALUES (?, ?)", [fileId, event])
+
+// pg: $1, $2 placeholders
+await client.query("SELECT * FROM files WHERE id = $1", [id])
+cur.execute("SELECT * FROM metadata WHERE file_id = ?", (file_id,))
+must use identifiers no raw output, use allow lists
+ALLOWED_SORT = {"name":"name", "date":"created_at"}
+sort_key = ALLOWED_SORT.get(user_sort_input, "created_at")
+query = f"SELECT * FROM files ORDER BY {sort_key} LIMIT 50"
+IF request_param_contains_sql_keywords AND param_origin != "trusted_ui"
+THEN
+  - increment_suspicion_score
+  - block_request
+  - log_event --type sqli_attempt
+  - optionally rate-limit source_ip
+IF query_runtime > 5s OR rows_returned > 1000
+THEN
+  - kill_query
+  - log_event --type 'expensive_query'
+  - alert_ops
+import re
+import os
+
+# Recursively search for unsafe SQL in Python files
+def scan_for_unsafe_sql(directory):
+    unsafe_patterns = [
+        re.compile(r'execute\(["\'].*?["\'].*?\)', re.IGNORECASE),  # look for string interpolation in execute calls
+    ]
+
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".py"):
+                with open(os.path.join(root, file), 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    for pattern in unsafe_patterns:
+                        if pattern.search(content):
+                            print(f"Unsafe SQL pattern found in {os.path.join(root, file)}")
+
+# Run the scan on the codebase
+scan_for_unsafe_sql('/path/to/your/codebase')
+rules:
+  - id: detect_sqli_injections
+    title: "Detect SQL Injection patterns"
+    when:
+      any:
+        - event: "query_contains_sqli_keywords"
+          keywords: ["UNION", "SELECT", "DROP", "--", "OR 1=1"]
+        - event: "query_length_exceeds_threshold"
+          length: 5000
+        - event: "unexpected_query_parameters_count"
+    actions:
+      - name: "mark_suspicious"
+        command: "/usr/local/bin/filer-score --file {{filename}} --add 2"
+      - name: "kill_query"
+        command: "SELECT pg_terminate_backend({{pid}})"
+      - name: "log_event"
+        command: "/usr/local/bin/filer-log --type 'sql_injection' --query '{{query}}' --source '{{source_ip}}'"
+      - name: "notify_ops"
+        command: "{{notify}}"
+    notes:
+      - This rule checks for common SQL injection patterns such as `UNION SELECT`, "OR 1=1", or excessive query length.
+      - Kill query if suspicious SQLi patterns are found. Log and alert on source IP.
+SELECT * FROM pg_stat_activity WHERE state = 'active' AND query_duration > 5000;
+# Only allow connections from local IPs
+host    all             all             192.168.1.0/24            md5
+log_statement = 'all'
+log_duration = on
+log_directory = '/var/log/postgresql'
+ALTER TABLE your_table ENABLE ROW LEVEL SECURITY;
+CREATE POLICY user_policy
+  ON your_table
+  FOR SELECT
+  USING (user_id = current_user);
+CREATE ROLE db_reader WITH LOGIN PASSWORD 'yourpassword';
+GRANT CONNECT ON DATABASE yourdb TO db_reader;
+GRANT USAGE ON SCHEMA public TO db_reader;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO db_reader;
+statement_timeout = 5000 # 5 seconds max per query
+max_connections = 100
+# Safe: Parameterized query (Prevents SQL Injection)
+query = "SELECT * FROM users WHERE username = %s AND password = %s"
+cursor.execute(query, (username, password))
+# Unsafe: String concatenation for queries (SQL Injection risk)
+query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+cursor.execute(query)
