@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>FilerWheel</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>body{background:#0b0b0b;color:#ccc;font-family:monospace}</style>
+</head>
+<body>
+  <h1>FilerWheel Dashboard</h1>
+  <div id="wheel"></div>
+  <ul id="feed"></ul>
+  <script>
+    const socket = io();
+    socket.on('status', msg=>{
+      const li=document.createElement('li');
+      li.textContent=`${msg.worker}: ${msg.status} (${msg.load})`;
+      document.getElementById('feed').prepend(li);
+    });
+  </script>
+</body>
+</html>
