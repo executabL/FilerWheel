@@ -1,0 +1,60 @@
+# supervisor.py (simplified)
+import time
+from crypto import verify_signature, verify_hash
+from storage import fetch_cas_blob, atomic_switch
+from ipc import listen_uds, send_to_worker
+from db import get_metadata_record, append_log
+
+HEARTBEAT_TIMEOUT = 15  # seconds
+
+workers = {"ingest-01": {"last_seen": 0, "state_hash": None}, ...}
+
+def handle_heartbeat(msg):
+    # verify worker signature
+    if not verify_signature(msg.serialize_without_sig(), msg.signature, worker_pubkey(msg.worker_id)):
+        append_log(event="bad_signature", actor="supervisor", target_worker=msg.worker_id, details="sig_fail")
+        return
+    # time check
+    if abs(now() - parse_ts(msg.timestamp)) > 10:
+        append_log(event="bad_timestamp", actor="supervisor", target_worker=msg.worker_id)
+        return
+    workers[msg.worker_id]["last_seen"] = now()
+    workers[msg.worker_id]["state_hash"] = msg.state_hash
+
+def monitor_loop():
+    while True:
+        for wid, info in workers.items():
+            if now() - info["last_seen"] > HEARTBEAT_TIMEOUT:
+                append_log(event="worker_suspect", actor="supervisor", target_worker=wid)
+                evaluate_failure(wid)
+        time.sleep(2)
+
+def evaluate_failure(worker_id):
+    # quick probe
+    if probe_worker_process(worker_id):
+        append_log(event="probe_success", actor="supervisor", target_worker=worker_id)
+        return
+    # decide policy
+    last_hash = workers[worker_id]["state_hash"]
+    metadata = get_metadata_record(last_hash)
+    if not verify_signature(metadata.json(), metadata.signature, metadata_author_pubkey):
+        append_log(event="metadata_sig_invalid", actor="supervisor", target_worker=worker_id)
+        require_admin(worker_id, reason="bad_metadata_signature")
+        return
+    # medium-risk path
+    if policy_allows_auto("medium") and attestations_ok(worker_id):
+        perform_restore(worker_id, last_hash)
+    else:
+        require_admin(worker_id, reason="policy_block")
+
+def perform_restore(worker_id, snapshot_hash):
+    blob_path = fetch_cas_blob(snapshot_hash)
+    if not verify_hash(blob_path, snapshot_hash):
+        append_log(event="hash_mismatch", actor="supervisor", target_worker=worker_id)
+        return
+    restore_path = copy_to_new_path(blob_path)
+    if not atomic_switch(restore_path, worker_active_path(worker_id)):
+        append_log(event="atomic_switch_fail", actor="supervisor", target_worker=worker_id)
+        rollback(restore_path)
+    else:
+        append_log(event="restore_success", actor="supervisor", target_worker=worker_id, resource_hash=snapshot_hash)
