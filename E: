@@ -1,0 +1,1 @@
+{"ts":"2025-10-25T13:05:00Z","event":"restore_success","actor_role":"supervisor","target_worker":"analysis-02","resource_hash":"sha256:deadbeef...","policy_level":"medium","outcome":"success","notes":"atomic_swap_complete"}
