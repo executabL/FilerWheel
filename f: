@@ -1,0 +1,8 @@
+{
+  "type": "heartbeat",
+  "worker_id": "ingest-01",           // opaque id, not linked to user
+  "timestamp": "2025-10-25T12:34:56Z",
+  "state_hash": "sha256:abcd...1234", // hash of worker's last stable state (CAS id)
+  "uptime_seconds": 1234,
+  "signature": "base64(ed25519_sig)"
+}
