@@ -1,0 +1,2 @@
+CREATE INDEX idx_cas_class ON cas_objects(classification);
+CREATE INDEX idx_snap_worker ON snapshots(worker_id);
