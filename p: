@@ -1,0 +1,18 @@
+file-path:
+description: 'Path to test file'
+required: true
+default: 'data/test.txt'
+
+jobs:
+test:
+# ... (runs-on, etc.)
+steps:
+- uses: actions/checkout@v4
+# ...
+- name: Run with input path
+env:
+INPUT_PATH: ${{ github.workspace }}/${{ inputs.file-path }} # Prefix with workspace for absolute
+run: |
+echo "Resolved path: $INPUT_PATH"
+if [ ! -f "$INPUT_PATH" ]; then echo "❌ File not found"; exit 1; fi
+python script.py --input "$INPUT_PATH"
