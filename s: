@@ -1,0 +1,10 @@
+from pathlib import Path
+
+# Instead of relative open('data/file.txt')
+workspace = Path('/github/workspace') # Or os.environ['GITHUB_WORKSPACE'] if set
+file_path = workspace / 'data' / 'file.txt'
+if file_path.exists():
+with open(file_path) as f:
+# code
+else:
+raise FileNotFoundError(f"Missing: {file_path}")
