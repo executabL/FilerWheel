@@ -1,0 +1,11 @@
+jobs:
+build:
+runs-on: ubuntu-latest
+container:
+image: python:3.12 # Or your custom image
+options: --volume ${{ github.workspace }}:/app # Mount entire repo as /app
+steps:
+- uses: actions/checkout@v4
+with:
+path: /app # Checkout directly into container mount
+- run: python /app/script.py # Use /app prefix
