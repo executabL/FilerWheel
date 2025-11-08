@@ -1,0 +1,11 @@
+--name: Debug file paths
+run: |
+echo "Current working directory: $(pwd)"
+echo "GitHub workspace: $GITHUB_WORKSPACE"
+echo "List root contents:"
+ls -la $GITHUB_WORKSPACE
+echo "List .github/workflows:"
+ls -la $GITHUB_WORKSPACE/.github/workflows
+echo "Check if python-app.yml exists:"
+if [ -f "$GITHUB_WORKSPACE/.github/workflows/python-app.yml" ]; then echo "✅ Found"; else echo "❌ Missing"; fi
+shell: bash
