@@ -1,0 +1,15 @@
+jobs:
+test:
+runs-on: ubuntu-latest
+defaults:
+run:
+working-directory: . # Or ./src if code is in a subdir
+steps:
+- uses: actions/checkout@v4 # Latest version for better path handling
+- name: Set up Python
+uses: actions/setup-python@v5
+with:
+python-version: '3.12' # Match app's version
+# Debug step from above goes here
+- name: Run Python application
+run: python main_script.py # Use absolute if needed: python ${{ github.workspace }}/main_script.py
