@@ -1,0 +1,132 @@
+#!/bin/bash
+set -e
+
+APP_NAME="RetroFS"
+PACKAGE="com.retrofs.app"
+VERSION="1.0"
+
+echo "Building $APP_NAME APK..."
+
+# === 1. Create Android project ===
+mkdir -p app/src/main/{assets,libs,java/com/retrofs/app}
+cat > app/src/main/AndroidManifest.xml << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.retrofs.app">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <application
+        android:label="RetroFS"
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="true">
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <service android:name=".RetroService" android:exported="false" />
+        <receiver android:name=".BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
+EOF
+
+# === 2. Main Activity (WebView) ===
+cat > app/src/main/java/com/retrofs/app/MainActivity.java << 'EOF'
+package com.retrofs.app;
+
+import android.os.Bundle;
+import android.webkit.WebView;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        WebView webView = new WebView(this);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.loadUrl("file:///android_asset/retrofs.html");
+        setContentView(webView);
+    }
+}
+EOF
+
+# === 3. Service + Boot Receiver ===
+cat > app/src/main/java/com/retrofs/app/RetroService.java << 'EOF'
+package com.retrofs.app;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
+import java.io.*;
+
+public class RetroService extends Service {
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{
+                "sh", "-c", "cp /data/data/com.retrofs.app/files/* /data/data/com.retrofs.app/ && python3 /data/data/com.retrofs.app/retrofs_server.py"
+            });
+        } catch (Exception e) {}
+        return START_STICKY;
+    }
+    @Override public IBinder onBind(Intent intent) { return null; }
+}
+EOF
+
+cat > app/src/main/java/com/retrofs/app/BootReceiver.java << 'EOF'
+package com.retrofs.app;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+
+public class BootReceiver extends BroadcastReceiver {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        context.startService(new Intent(context, RetroService.class));
+    }
+}
+EOF
+
+# === 4. Embed your files ===
+mkdir -p app/src/main/assets
+cp ~/retrofs.html app/src/main/assets/
+cp ~/file_browser.py app/src/main/assets/retrofs_server.py
+
+# === 5. Gradle ===
+cat > app/build.gradle << 'EOF'
+apply plugin: 'com.android.application'
+android {
+    compileSdk 33
+    defaultConfig {
+        applicationId "com.retrofs.app"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+    }
+}
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}
+EOF
+
+cat > gradle.properties << 'EOF'
+android.useAndroidX=true
+EOF
+
+# === 6. Build ===
+./gradlew assembleDebug
+
+# === 7. Output ===
+APK="app/build/outputs/apk/debug/app-debug.apk"
+cp $APK ../RETROFS-NUCLEAR.apk
+echo "APK READY: ../RETROFS-NUCLEAR.apk"
+termux-open ../RETROFS-NUCLEAR.apk
