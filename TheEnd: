@@ -1,0 +1,7 @@
+Android Tablet
+ └─ Termux
+     ├─ Python (main.py) → triggers UI
+     ├─ Docker (3 containers: core, sync, vault)
+     ├─ watchdog.py → monitors + heals + animates
+     ├─ filesystem-feedback.html → retro UI
+     └─ ~/.termux/boot/ → auto-start
