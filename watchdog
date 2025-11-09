@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+import subprocess
+import time
+import json
+import os
+from pathlib import Path
+
+# === CONFIG ===
+CONTAINERS = {
+    "fs-core":   {"anim": "gears",  "name": "Filesystem Core"},
+    "fs-sync":   {"anim": "tube",   "name": "Sync Engine"},
+    "fs-vault":  {"anim": "vault",  "name": "Secure Vault"}
+}
+HTML_FILE = "/data/data/com.termux/files/home/filesystem-feedback.html"
+LOG_FILE = "/data/data/com.termux/files/home/watchdog.log"
+CHECK_INTERVAL = 5  # seconds
+DOCKER_CMD = "docker"  # or "podman"
+
+# === Helpers ===
+def log(msg):
+    timestamp = time.strftime("%H:%M:%S")
+    entry = f"[{timestamp}] {msg}"
+    print(entry)
+    Path(LOG_FILE).open("a").write(entry + "\n")
+    try:
+        subprocess.run(["termux-toast", msg[:60]], check=False)
+    except:
+        pass
+
+def get_running():
+    try:
+        out = subprocess.check_output([DOCKER_CMD, "ps", "--format", "json"], text=True)
+        return {json.loads(line)["Names"] for line in out.strip().split("\n") if line}
+    except:
+        return set()
+
+def restart_container(name):
+    log(f"Restarting {name}...")
+    subprocess.run([DOCKER_CMD, "start", name], check=False)
+    trigger_ui(CONTAINERS[name]["anim"])
+    log(f"{name} restarted.")
+
+def trigger_ui(anim_id):
+    """Toggle checkbox in HTML — no JS needed"""
+    html = Path(HTML_FILE).read_text()
+    trigger_line = f'id="{anim_id}" class="trigger"'
+    checked_line = f'id="{anim_id}" class="trigger" checked'
+    
+    if checked_line not in html:
+        html = html.replace(trigger_line, checked_line)
+        Path(HTML_FILE).write_text(html)
+        # Auto-uncheck after 3s
+        time.sleep(3)
+        html = html.replace(checked_line, trigger_line)
+        Path(HTML_FILE).write_text(html)
+
+# === Main Loop ===
+def main():
+    log("Watchdog started. Monitoring containers...")
+    seen = set()
+    
+    while True:
+        try:
+            running = get_running()
+            expected = set(CONTAINERS.keys())
+
+            # Detect new/dead
+            started = expected - running
+            stopped = seen - running
+
+            for name in started:
+                log(f"{CONTAINERS[name]['name']} is DOWN. Starting...")
+                subprocess.run([DOCKER_CMD, "start", name], check=False)
+                trigger_ui(CONTAINERS[name]["anim"])
+
+            for name in stopped:
+                log(f"{CONTAINERS[name]['name']} crashed! Restarting...")
+                restart_container(name)
+
+            seen = running
+            time.sleep(CHECK_INTERVAL)
+
+        except Exception as e:
+            log(f"Watchdog error: {e}")
+            time.sleep(CHECK_INTERVAL)
+
+if __name__ == "__main__":
+    main()
