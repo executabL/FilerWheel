@@ -1,0 +1,10 @@
+# 1. Save files
+nano ~/retrofs.html        # ← paste HTML
+nano ~/file_browser.py     # ← paste Python
+chmod +x ~/file_browser.py
+
+# 2. Start
+python ~/file_browser.py &
+
+# 3. Open
+termux-open-url "http://127.0.0.1:8080/retrofs.html"
