@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Filesystem Animations (No JS)</title>
+  <style>
+    /* === Layout & Typography === */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f8f8;
+      color: #000;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+    .demo { margin: 2rem 0; }
+    .controls { margin: 1rem 0; }
+    label {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #000;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      user-select: none;
+    }
+    label:hover { background: #333; }
+
+    /* Hide checkboxes */
+    .trigger { display: none; }
+
+    /* === Loader Container === */
+    .loader {
+      display: inline-block;
+      width: 80px;
+      height: 80px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .trigger:checked ~ .loader {
+      opacity: 1;
+    }
+
+    /* Pause animations until active */
+    .loader svg * {
+      animation-play-state: paused;
+    }
+    .trigger:checked ~ .loader svg * {
+      animation-play-state: running;
+    }
+
+    /* === Shared SVG Styles === */
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+    .stroke { stroke: #000; fill: none; stroke-width: 2.5; }
+    .fill { fill: #000; }
+
+    /* === 1. Gears Animation === */
+    .gear1 { transform-origin: 50% 28%; }
+    .gear2 { transform-origin: 50% 72%; }
+
+    /* === 2. Pneumatic Tube === */
+    #tube-path { stroke-dasharray: 5,5; opacity: 0.3; }
+
+    /* === 3. Vault Door === */
+    .vault-door { transform-origin: 18px 40px; }
+  </style>
+</head>
+<body>
+
+  <h1>Filesystem Actions (Pure CSS Animations)</h1>
+
+  <!-- === 1. Fetching: Gears === -->
+  <div class="demo">
+    <div class="controls">
+      <input type="checkbox" id="fetch-gears" class="trigger" checked>
+      <label for="fetch-gears">Toggle Fetching (Gears)</label>
+    </div>
+
+    <div class="loader">
+      <svg viewBox="0 0 100 100" aria-label="Fetching data...">
+        <!-- Gear 1 (top) -->
+        <path class="gear1 stroke" d="M50 15 L55 20 L60 15 L58 25 L63 30 L55 32 L50 35 L45 32 L37 30 L42 25 L40 15 L45 20 Z">
+          <animateTransform attributeName="transform" type="rotate" from="0 50 28" to="360 50 28" dur="2.5s" repeatCount="indefinite"/>
+        </path>
+        <!-- Gear 2 (bottom, counter-rotate) -->
+        <path class="gear2 stroke" d="M50 65 L55 60 L60 65 L58 55 L63 50 L55 48 L50 45 L45 48 L37 50 L42 55 L40 65 L45 60 Z">
+          <animateTransform attributeName="transform" type="rotate" from="360 50 72" to="0 50 72" dur="2.5s" repeatCount="indefinite"/>
+        </path>
+        <circle cx="50" cy="50" r="4" class="fill"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- === 2. Transfer: Pneumatic Tube === -->
+  <div class="demo">
+    <div class="controls">
+      <input type="checkbox" id="fetch-tube" class="trigger">
+      <label for="fetch-tube">Toggle Transfer (Pneumatic Tube)</label>
+    </div>
+
+    <div class="loader">
+      <svg viewBox="0 0 120 60" aria-label="Transferring via secure tube...">
+        <defs>
+          <path id="tube-path" d="M15,30 Q40,15 60,30 T105,30" class="stroke" stroke-dasharray="4,4"/>
+        </defs>
+        <use href="#tube-path" opacity="0.3"/>
+        <!-- Moving capsule -->
+        <circle r="7" class="fill">
+          <animateMotion dur="1.8s" repeatCount="indefinite" rotate="auto">
+            <mpath href="#tube-path"/>
+          </animateMotion>
+        </circle>
+        <!-- End caps -->
+        <circle cx="15" cy="30" r="4" class="fill"/>
+        <circle cx="105" cy="30" r="4" class="fill"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- === 3. Access: Vault Door === -->
+  <div class="demo">
+    <div class="controls">
+      <input type="checkbox" id="access-vault" class="trigger">
+      <label for="access-vault">Toggle Secure Access (Vault)</label>
+    </div>
+
+    <div class="loader">
+      <svg viewBox="0 0 80 80" aria-label="Opening secure vault...">
+        <!-- Vault Door Group -->
+        <g class="vault-door">
+          <rect x="15" y="10" width="50" height="60" rx="3" class="stroke" stroke-width="4"/>
+          <!-- Handle -->
+          <circle cx="55" cy="40" r="9" class="stroke" stroke-width="3"/>
+          <line x1="55" y1="31" x2="55" y2="49" class="stroke" stroke-width="2.5"/>
+          <line x1="46" y1="40" x2="64" y2="40" class="stroke" stroke-width="2.5"/>
+        </g>
+
+        <!-- SMIL: Spin handle, then open door -->
+        <animate href=".vault-door" attributeName="transform" type="rotate"
+                 from="0 18 40" to="-92 18 40" dur="1.4s" begin="0.5s" fill="freeze"/>
+      </svg>
+    </div>
+  </div>
+
+  <hr>
+  <p><strong>No JavaScript used.</strong> Animations run via CSS + SVG SMIL. Toggle with checkboxes or render <code>.trigger:checked</code> server-side.</p>
+
+</body>
+</html>
