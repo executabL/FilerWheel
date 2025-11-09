@@ -1,0 +1,4 @@
+<!-- Example: Server-side trigger on file fetch -->
+<input type="checkbox" id="gears" class="trigger" checked>
+<label for="gears">Loading files...</label>
+<!-- Paste the gears .loader block here -->
