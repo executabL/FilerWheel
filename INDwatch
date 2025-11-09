@@ -1,0 +1,10 @@
+# 1. Save
+cat > ~/watchdog.py << 'EOF'
+# [PASTE THE SCRIPT ABOVE]
+EOF
+
+# 2. Make executable
+chmod +x ~/watchdog.py
+
+# 3. Run in background
+nohup python ~/watchdog.py > /dev/null 2>&1 &
