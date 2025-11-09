@@ -1,0 +1,12 @@
+# 1. Save everything
+# 2. Run:
+termux-wake-lock
+python ~/watchdog.py &
+python -c "
+from pathlib import Path
+import time, subprocess
+# Simulate crash
+subprocess.run(['docker', 'stop', 'fs-vault'])
+time.sleep(8)
+print('Watchdog should have restarted vault + played animation')
+"
