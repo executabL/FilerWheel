@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RetroFS</title>
+  <style>
+    :root { --bg: #f8f8f8; --fg: #000; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0d0d0d; --fg: #fff; } }
+    [data-theme="dark"] { --bg: #0d0d0d; --fg: #fff; }
+    [data-theme="light"] { --bg: #f8f8f8; --fg: #000; }
+    body { background: var(--bg); color: var(--fg); font-family: 'Courier New', monospace; padding: 2rem; }
+    .card { background: var(--bg); border: 2px solid var(--fg); padding: 1rem; margin: 1rem 0; border-radius: 8px; }
+    .status { float: right; font-weight: bold; }
+    h1 { font-size: 1.8rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>RetroFS</h1>
+  <div class="card">
+    <strong>Core</strong> <span class="status" id="core-status">● Online</span>
+    <div id="gears-loader"></div>
+  </div>
+  <div class="card">
+    <strong>Sync</strong> <span class="status" id="sync-status">● Online</span>
+    <div id="tube-loader"></div>
+  </div>
+  <div class="card">
+    <strong>Vault</strong> <span class="status" id="vault-status">● Locked</span>
+    <div id="vault-loader"></div>
+  </div>
+
+  <!-- Paste your <input> + <div class="loader"> blocks here -->
+  <!-- Your Python watchdog will toggle them -->
+</body>
+</html>
