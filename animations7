@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Synced Filesystem Animations + Sound (No JS)</title>
+  <style>
+    /* === Colors === */
+    :root {
+      --bg: #f8f8f8; --fg: #000; --label-bg: #000; --label-fg: #fff;
+      --stroke: #000; --fill: #000; --shadow: rgba(0,0,0,0.1);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d0d0d; --fg: #fff; --label-bg: #fff; --label-fg: #000;
+        --stroke: #fff; --fill: #fff; --shadow: rgba(255,255,255,0.1);
+      }
+    }
+    [data-theme="dark"] { --bg: #0d0d0d; --fg: #fff; --label-bg: #fff; --label-fg: #000; --stroke: #fff; --fill: #fff; }
+    [data-theme="light"] { --bg: #f8f8f8; --fg: #000; --label-bg: #000; --label-fg: #fff; --stroke: #000; --fill: #000; }
+
+    /* === Layout === */
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--fg);
+      padding: 2rem; margin: 0; transition: background 0.4s ease, color 0.4s ease;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 1.5rem; opacity: 0.95; }
+    .demo { margin: 2.5rem 0; }
+    .controls { margin: 1rem 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    label {
+      padding: 0.5rem 1rem; background: var(--label-bg); color: var(--label-fg);
+      border-radius: 6px; cursor: pointer; font-size: 0.9rem; user-select: none;
+      transition: all 0.3s ease; box-shadow: 0 2px 4px var(--shadow);
+    }
+    label:hover { transform: translateY(-1px); box-shadow: 0 4px 8px var(--shadow); }
+
+    .trigger { display: none; }
+    .loader {
+      display: inline-block; width: 80px; height: 80px; opacity: 0; transition: opacity 0.35s ease;
+    }
+    .trigger:checked ~ .loader { opacity: 1; }
+    .loader svg * { animation-play-state: paused; stroke: var(--stroke); fill: var(--fill); }
+    .trigger:checked ~ .loader svg * { animation-play-state: running; }
+
+    svg { width: 100%; height: 100%; }
+    .stroke { stroke: var(--stroke); fill: none; stroke-width: 2.8; }
+    .fill { fill: var(--fill); }
+
+    audio { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- === Theme Toggle === -->
+  <div class="controls">
+    <input type="checkbox" id="theme" class="trigger">
+    <label for="theme" id="theme-label">Dark Mode</label>
+  </div>
+
+  <h1>Synced Animations + Sound</h1>
+
+  <!-- === 1. GEARS: Snare → Grind === -->
+  <div class="demo">
+    <div class="controls">
+      <input type="checkbox" id="gears" class="trigger" checked>
+      <label for="gears">Fetching (Gears)</label>
+    </div>
+    <div class="loader">
+      <svg viewBox="0 0 100 100" aria-label="Processing...">
+        <!-- Snare on start -->
+        <audio id="gears-snare">
+          <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQg0=">
+        </audio>
+        <!-- Grind loop -->
+        <audio id="gears-grind" loop>
+          <source src="data:audio/wav;base64,UklGRiQCAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAGaGhoaWppaWlqaWtra2tsbGxtbW1tbW5ubm9vcHBvcXJxdHV1dXZ2dnd3d3h4eHl5eXp6e3t8fX19fn5+f39/gICBgYGBgoKDg4OEhYaHiImKi4yNjY2Oj5CRkpOUlZaXmJmam5ydnp+goaKjo6OkpKSlpqeoqaqrrK2ur7CxtLG0sbSztrO3t7i5uru8vb2+vsDBwsPExcbHyMrLzM3Oz9DR0tPU1dbX2Nna2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/g==">
+        </audio>
+
+        <path class="gear1 stroke" d="M50 15 L55 20 L60 15 L58 25 L63 30 L55 32 L50 35 L45 32 L37 30 L42 25 L40 15 L45 20 Z">
+          <animateTransform attributeName="transform" type="rotate" from="0 50 28" to="360 50 28" dur="2.5s" repeatCount="indefinite"/>
+        </path>
+        <path class="gear2 stroke" d="M50 65 L55 60 L60 65 L58 55 L63 50 L55 48 L50 45 L45 48 L37 50 L42 55 L40 65 L45 60 Z">
+          <animateTransform attributeName="transform" type="rotate" from="360 50 72" to="0 50 72" dur="2.5s" repeatCount="indefinite"/>
+        </path>
+        <circle cx="50" cy="50" r="4" class="fill"/>
+
+        <!-- Trigger sounds via SMIL -->
+        <set href="#gears-snare" attributeName="autoplay" to="true" begin="0s"/>
+        <set href="#gears-grind" attributeName="autoplay" to="true" begin="0.1s"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- === 2. TUBE: Whoosh → Squeak === -->
+  <div class="demo">
+    <div class="controls">
+      <input type="checkbox" id="tube" class="trigger">
+      <label for="tube">Transfer (Tube)</label>
+    </div>
+    <div class="loader">
+      <svg viewBox="0 0 120 60" aria-label="Transferring...">
+        <audio id="tube-whoosh">
+          <source src="data:audio/wav;base64,UklGRhwBAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAGQEBAP0BAQD9AQEBBQEBAQUBAQEFBQUFBQUFCQUFDQUFDQUFEQUFFQUFGQUFHQUFHgUGBgYGBgYKCgoODg4PEhYSFhImKi4yNjY2Oj5CRkpOUlZaXmJmam5ydnp+goaKjo6OkpKSlpqeoqaqrrK2ur7CxtLG0sbSztrO3t7i5uru8vb2+vsDBwsPExcbHyMrLzM3Oz9DR0tPU1dbX2Nna2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/g==">
+        </audio>
+        <audio id="tube-squeak">
+          <source src="data:audio/wav;base64,UklGRiACAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAGg4ODhISEhYaHiImKi4yNjY2Oj5CRkpOUlZaXmJmam5ydnp+goaKjo6OkpKSlpqeoqaqrrK2ur7CxtLG0sbSztrO3t7i5uru8vb2+vsDBwsPExcbHyMrLzM3Oz9DR0tPU1dbX2Nna2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/g==">
+        </audio>
+
+        <defs>
+          <path id="tube-path" d="M15
