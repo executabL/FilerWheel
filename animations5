@@ -1,0 +1,3 @@
+.trigger { display: none; }
+.trigger:checked ~ .loader { opacity: 1; }
+.trigger:checked ~ .loader .gear { animation-play-state: running; }
