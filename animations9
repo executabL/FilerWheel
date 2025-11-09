@@ -1,0 +1,6 @@
+<input type="checkbox" id="mute" class="trigger">
+<label for="mute">Mute Sounds</label>
+
+<style>
+#mute:checked ~ * audio { display: none !important; }
+</style>
