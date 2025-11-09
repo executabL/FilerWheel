@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RetroFS</title>
+  <style>
+    /* === THEME === */
+    :root { --bg: #f8f8f8; --fg: #000; --accent: #000; --card-bg: #fff; --border: #000; --hover: #eee; --progress: #0a0; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0d0d0d; --fg: #fff; --accent: #fff; --card-bg: #1a1a1a; --border: #444; --hover: #333; --progress: #0f0; }
+    }
+    [data-theme="dark"] { --bg: #0d0d0d; --fg: #fff; --accent: #fff; --card-bg: #1a1a1a; --border: #444; --hover: #333; --progress: #0f0; }
+    [data-theme="light"] { --bg: #f8f8f8; --fg: #000; --accent: #000; --card-bg: #fff; --border: #000; --hover: #eee; --progress: #0a0; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--fg); font-family: 'Courier New', monospace; padding: 1.5rem; line-height: 1.6; }
+    h1 { font-size: 2rem; text-align: center; margin: 1rem 0 2rem; letter-spacing: 2px; }
+    .container { max-width: 800px; margin: 0 auto; }
+
+    .card { background: var(--card-bg); border: 3px solid var(--border); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+    .card-title { font-weight: bold; font-size: 1.1rem; }
+    .status { font-weight: bold; }
+    .online { color: #0a0; } .offline { color: #a00; } .locked { color: #aa0; }
+
+    /* === FILE BROWSER === */
+    .path-bar { font-family: monospace; font-size: 0.9rem; margin-bottom: 0.8rem; word-break: break-all; }
+    .file-list { list-style: none; }
+    .file-item {
+      padding: 0.6rem 0; border-bottom: 1px dashed var(--border); display: flex; justify-content: space-between;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .file-item:hover { background: var(--hover); }
+    .file-name { font-family: monospace; flex: 1; }
+    .file-size { font-size: 0.8rem; opacity: 0.7; margin-left: 1rem; }
+    .file-actions { opacity: 0; transition: opacity 0.2s; }
+    .file-item:hover .file-actions { opacity: 1; }
+    .action-btn { background: none; border: none; color: var(--fg); font-size: 1.2rem; cursor: pointer; margin-left: 0.5rem; }
+
+    /* === DROP ZONE === */
+    .drop-zone {
+      border: 3px dashed var(--border); border-radius: 8px; padding: 2rem; text-align: center;
+      margin: 1rem 0; font-style: italic; opacity: 0.7; transition: all 0.3s; position: relative;
+    }
+    .drop-zone.dragover { border-color: var(--accent); background: rgba(255,255,255,0.1); opacity: 1; }
+    .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-top: 1rem; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: var(--progress); transition: width 0.1s; }
+
+    /* === MODAL === */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 100; }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--card-bg); border: 3px solid var(--border); padding: 1.5rem; border-radius: 12px; width: 90%; max-width: 400px; }
+    .modal input { width: 100%; padding: 0.6rem; margin: 0.5rem 0; font-family: monospace; }
+
+    /* === ANIMATIONS === */
+    .loader { width: 70px; height: 70px; opacity: 0; transition: opacity 0.3s; margin: 0.5rem 0; }
+    .trigger:checked ~ .loader { opacity: 1; }
+    .trigger:checked ~ .loader svg * { animation-play-state: running; }
+    .loader svg * { animation-play-state: paused; stroke: var(--accent); fill: var(--accent); }
+    svg { width: 100%; height: 100%; }
+    .stroke { stroke: var(--accent); fill: none; stroke-width: 2.8; }
+    .fill { fill: var(--accent); }
+
+    .controls { text-align: center; margin: 2rem 0; }
+    label { padding: 0.6rem 1.2rem; background: var(--accent); color: var(--bg); border-radius: 8px; cursor: pointer; margin: 0 0.5rem; }
+    .trigger { display: none; }
+
+    .status-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); border-top: 2px solid var(--border); padding: 0.8rem; font-size: 0.8rem; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>RETROFS</h1>
+
+    <div class="controls">
+      <input type="checkbox" id="theme" class="trigger">
+      <label for="theme" id="theme-label">Dark Mode</label>
+    </div>
+
+    <!-- STATUS CARDS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Core Engine</div>
+        <div class="status online" id="core-status">Online</div>
+      </div>
+      <div class="loader" id="gears-loader">
+        <input type="checkbox" id="gears" class="trigger">
+        <svg viewBox="0 0 100 100"><!-- GEARS SVG + AUDIO --></svg>
+      </div>
+    </div>
+    <!-- Sync & Vault cards — same -->
+
+    <!-- === FILE BROWSER === -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Files</div>
+        <div><small class="path-bar" id="path-display">/storage/emulated/0</small></div>
+      </div>
+
+      <!-- DROP ZONE -->
+      <div class="drop-zone" id="drop-zone">
+        <div>Drop files here to upload</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+
+      <!-- FILE LIST -->
+      <ul class="file-list" id="file-list"></ul>
+
+      <!-- ACTION BUTTONS -->
+      <div class="controls" style="margin-top:1rem;">
+        <label for="new-folder">+ Folder</label>
+        <label for="refresh">Refresh</label>
+      </div>
+
+      <!-- HIDDEN TRIGGERS -->
+      <input type="checkbox" id="new-folder" class="trigger">
+      <input type="checkbox" id="refresh" class="trigger">
+    </div>
+
+    <!-- === MODAL === -->
+    <div class="modal" id="modal">
+      <div class="modal-content">
+        <h3 id="modal-title">Create Folder</h3>
+        <input type="text" id="modal-input" placeholder="Name" />
+        <div class="controls" style="margin-top:1rem;">
+          <label id="modal-ok">OK</label>
+          <label id="modal-cancel">Cancel</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span id="clock"></span> | 
+      <span id="watchdog-status">Watchdog: Active</span>
+    </div>
+  </div>
+
+  <!-- === UPLOAD BRIDGE (Tiny JS) === -->
+  <script>
+    const dropZone = document.getElementById('drop-zone');
+    const progressFill = document.getElementById('progress-fill');
+
+    ['dragover', 'dragenter'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.add('dragover')));
+    ['dragleave', 'dragend', 'drop'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.remove('dragover')));
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      const files = e.dataTransfer.files;
+      if (!files.length) return;
+
+      let uploaded = 0;
+      const total = files.length;
+
+      Array.from(files).forEach(file => {
+        const form = new FormData();
+        form.append('file', file);
+        form.append('path', document.getElementById('path-display').textContent);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload');
+        xhr.upload.onprogress = ev => {
+          if (ev.lengthComputable) {
+            const percent = (uploaded + ev.loaded / ev.total) / total * 100;
+            progressFill.style.width = percent + '%';
+          }
+        };
+        xhr.onload = () => {
+          uploaded++;
+          if (uploaded === total) {
+            progressFill.style.width = '100%';
+            setTimeout(() => progressFill.style.width = '0%', 1000);
+            fetch('/api/refresh?' + Date.now());
+            document.getElementById('tube').checked = true;
+          }
+        };
+        xhr.send(form);
+      });
+    });
+
+    // Rest of UI update...
+    const updateUI = () => {
+      fetch('/tmp/retrofs.json?' + Date.now())
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById('path-display').textContent = data.path || '/';
+          document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+          const list = document.getElementById('file-list');
+          list.innerHTML = '';
+          (data.files || []).forEach(f => {
+            const li = document.createElement('li');
+            li.className = 'file-item';
+            li.innerHTML = `
+              <span class="file-name">${f.name}</span>
+              <span class="file-size">${f.size}</span>
+              <div class="file-actions">
+                <button class="action-btn" data-action="rename" data-path="${f.path}">Rename</button>
+                <button class="action-btn" data-action="delete" data-path="${f.path}">Delete</button>
+              </div>
+            `;
+            list.appendChild(li);
+          });
+        })
+        .catch(() => {});
+    };
+    setInterval(updateUI, 1000);
+    updateUI();
+  </script>
+</body>
+</html>
