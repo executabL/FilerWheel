@@ -1,0 +1,9 @@
+# 1. Save files
+nano ~/retrofs.html        # ← paste HTML
+nano ~/ui_bridge.py        # ← paste Python
+
+# 2. Start bridge
+python ~/ui_bridge.py &
+
+# 3. Open in browser
+termux-open-url "http://127.0.0.1:8080/retrofs.html"
