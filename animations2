@@ -1,0 +1,15 @@
+<div class="vault" aria-label="Accessing secure files">
+  <svg viewBox="0 0 80 80" width="70" height="70">
+    <!-- Vault door (rotates open) -->
+    <g class="door">
+      <rect x="15" y="10" width="50" height="60" fill="none" stroke="#000" stroke-width="4" rx="2"/>
+      <circle cx="55" cy="40" r="8" fill="none" stroke="#000" stroke-width="3"/>
+      <line x1="55" y1="32" x2="55" y2="48" stroke="#000" stroke-width="2"/>
+      <line x1="47" y1="40" x2="63" y2="40" stroke="#000" stroke-width="2"/>
+    </g>
+    <!-- Handle spins, then door opens -->
+    <animateTransform xlink:href=".door" attributeName="transform" type="rotate" 
+                      from="0 40 40" to="-90 15 40" dur="1.2s" begin="0.4s" fill="freeze"/>
+    <set xlink:href=".door .handle" attributeName="d" to="M55 35 L55 45" begin="0s" dur="0.4s"/>
+  </svg>
+</div>
