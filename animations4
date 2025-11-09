@@ -1,0 +1,6 @@
+<input type="checkbox" id="fetching" class="trigger" checked>
+<label for="fetching" class="hidden"></label>
+
+<div class="loader gears" data-state="active">
+  <!-- gear SVG -->
+</div>
