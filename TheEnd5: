@@ -1,0 +1,20 @@
+# Save as ~/ui_bridge.py
+import json, time, subprocess
+from pathlib import Path
+
+JSON_FILE = "/tmp/retrofs.json"
+HTML_FILE = "/data/data/com.termux/files/home/retrofs.html"
+
+def update_status(core=True, sync=True, vault="locked"):
+    data = {"core": core, "sync": sync, "vault": vault, "time": int(time.time())}
+    Path(JSON_FILE).write_text(json.dumps(data))
+    # Optional: serve via http.server
+    subprocess.run(["pkill", "-f", "python -m http.server"], check=False)
+    subprocess.Popen(["python", "-m", "http.server", "8080", "--bind", "127.0.0.1"])
+
+if __name__ == "__main__":
+    update_status()
+    print("UI Bridge running on http://127.0.0.1:8080/retrofs.html")
+    try:
+        while True: time.sleep(1)
+    except: pass
