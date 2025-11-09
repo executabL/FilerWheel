@@ -1,0 +1,5 @@
+nano ~/retrofs.html
+nano ~/file_browser.py
+chmod +x ~/file_browser.py
+python ~/file_browser.py &
+termux-open-url "http://127.0.0.1:8080/retrofs.html"
