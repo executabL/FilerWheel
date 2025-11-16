@@ -1,3 +1,4 @@
+{
 # GOOD: parameterized query
 cur.execute("SELECT id,filename FROM files WHERE owner_id = %s AND tag = %s", (owner_id, tag))
 // GOOD: placeholders ($1, $2) for Postgres
@@ -87,3 +88,4 @@ cursor.execute(query, (username, password))
 # Unsafe: String concatenation for queries (SQL Injection risk)
 query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
 cursor.execute(query)
+}
