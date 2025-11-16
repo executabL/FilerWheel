@@ -1,5 +1,4 @@
-Android Tablet
- └─ Termux
+    Termux
      ├─ Python (main.py) → triggers UI
      ├─ Docker (3 containers: core, sync, vault)
      ├─ watchdog.py → monitors + heals + animates
