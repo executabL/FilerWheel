@@ -1,3 +1,4 @@
+{
 version: "3.9"
 
 services:
@@ -58,3 +59,4 @@ services:
           echo \"File quarantined: \$file\" > /usr/share/nginx/html/status.txt;
         done
       "
+}
