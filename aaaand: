@@ -1,4 +1,4 @@
-
+{
 mkdir -p ~/chaosbox/html
 cat > ~/chaosbox/html/index.html <<'EOF'
 <!DOCTYPE html>
