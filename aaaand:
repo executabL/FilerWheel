@@ -1,3 +1,4 @@
+
 mkdir -p ~/chaosbox/html
 cat > ~/chaosbox/html/index.html <<'EOF'
 <!DOCTYPE html>
@@ -14,5 +15,5 @@ setInterval(() => {
 </script>
 </body></html>
 EOF
-
 echo "ChaosBox ready" > ~/chaosbox/html/status.txt
+}
