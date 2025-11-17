@@ -2,5 +2,5 @@
      ├─ Python (main.py) → triggers UI
      ├─ Docker (3 containers: core, sync, vault)
      ├─ watchdog.py → monitors + heals + animates
-     ├─ filesystem-feedback.html → retro UI
+     ├─ filesystem-feedback.html → filerWheelUI
      └─ ~/.termux/boot/ → auto-start
