@@ -1,3 +1,4 @@
+{
 # supervisor.py (simplified)
 import time
 from crypto import verify_signature, verify_hash
@@ -58,3 +59,4 @@ def perform_restore(worker_id, snapshot_hash):
         rollback(restore_path)
     else:
         append_log(event="restore_success", actor="supervisor", target_worker=worker_id, resource_hash=snapshot_hash)
+}
