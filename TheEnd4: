@@ -1,9 +1,10 @@
+{{
 <!DOCTYPE html>
 <html lang="en" data-theme="auto">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RetroFS</title>
+  <title>filer/WHEEL</title>
   <style>
     /* === THEME === */
     :root { --bg: #f8f8f8; --fg: #000; --accent: #000; --card-bg: #fff; --border: #000; }
@@ -15,7 +16,7 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: var(--bg); color: var(--fg); font-family: 'Courier New', monospace;
+      background: var(--bg); color: var(--fg); font-family: 'Camingo Code Regularl', monospace;
       padding: 1.5rem; line-height: 1.6; transition: background 0.4s, color 0.4s;
     }
     h1 { font-size: 2rem; text-align: center; margin: 1rem 0 2rem; letter-spacing: 2px; }
@@ -40,7 +41,7 @@
       cursor: pointer; transition: background 0.2s;
     }
     .file-item:hover { background: rgba(255,255,255,0.1); }
-    .file-name { font-family: monospace; }
+    .file-name { font-family: camingo code regular; }
     .file-size { font-size: 0.8rem; opacity: 0.7; }
 
     /* === ANIMATIONS === */
@@ -76,7 +77,8 @@
 <body>
 
   <div class="container">
-    <h1>RETROFS</h1>
+    <h1>FilerWheel
+</h1>
 
     <!-- === THEME TOGGLE === -->
     <div class="controls">
@@ -181,9 +183,9 @@
 
   <!-- === PYTHON BRIDGE: Update UI from File === -->
   <script>
-    // NO JS IN CORE — but tiny bridge to read /tmp/retrofs.json
+    // NO JS IN CORE — but tiny bridge to read /tmp/filerWheel.json
     setInterval(() => {
-      fetch('/tmp/retrofs.json?' + Date.now())
+      fetch('/tmp/filerWheel.json?' + Date.now())
         .then(r => r.json())
         .then(data => {
           if (data.core === false) document.getElementById('core-status').classList.replace('online', 'offline');
@@ -196,3 +198,4 @@
   </script>
 </body>
 </html>
+}
