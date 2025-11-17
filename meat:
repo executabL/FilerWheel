@@ -3,7 +3,7 @@
 # -*- coding: utf-8 -*-
 
 """
-FilerWheel — secure file ingest / storage / containment engine
+filer/WHEEL — secure file ingest / storage / containment engine
 Platform: Termux / Android (Linux environment)
 Language: Python 3.x
 Style: minimal, modular, lean, with light thematic touches
@@ -24,9 +24,9 @@ import tempfile
 
 # ====== Configuration & Globals ======
 
-APP_NAME = "FilerWheel"
+APP_NAME = "filer/WHEEL"
 VERSION = "0.1"
-BASE_DIR = Path.home() / ".filerwheel"
+BASE_DIR = Path.home() / "filer/WHEEL"
 TIERS = {
     "clean": BASE_DIR / "tier_clean",
     "suspect": BASE_DIR / "tier_suspect",
@@ -54,7 +54,7 @@ def ensure_dirs():
 def log(msg: str):
     """Append a timestamped log message to the logfile."""
     ts = datetime.utcnow().isoformat()
-    with open(LOG_FILE, "a") as f:
+    with open(=-LOG_FILE, "a") as f:
         f.write(f"{ts} | {msg}\n")
 
 def fatal(msg: str, exit_code=1):
@@ -97,7 +97,7 @@ def move_to_tier(src: Path, tier: str) -> Path:
     return dest
 
 def ingest(filepath: Path):
-    """Take a file into FilerWheel, classify, and route it."""
+    """Take a file into Filer/WHEEL, classify, and route it."""
     check_kill_switch()
     if not filepath.exists():
         fatal(f"File not found: {filepath}")
@@ -158,13 +158,13 @@ def deactivate_kill_switch():
 
 def show_header():
     print(SEPARATOR)
-    print(f"{APP_NAME} v{VERSION}")
-    print("Tiered Cold Storage & Threat Museum Interface")
+    print(f"{filer_WHEEL_systems} v{VERSION}")
+    print("Cold Storage Tier & Threat Museum Interface")
     print(SEPARATOR)
 
 def show_help():
     print("Commands:")
-    print("  ingest <filepath>        — ingest a file into FilerWheel")
+    print("  ingest <filepath>        — ingest a file into filer/WHEEL")
     print("  ls <tier>                — list files in a tier (clean, suspect, quarantine)")
     print("  cat <tier> <filename>    — view file contents (read-only)")
     print("  activate_kill            — enable kill switch")
