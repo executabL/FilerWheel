@@ -1,3 +1,4 @@
+{
 <div class="vault" aria-label="Accessing secure files">
   <svg viewBox="0 0 80 80" width="70" height="70">
     <!-- Vault door (rotates open) -->
@@ -13,3 +14,4 @@
     <set xlink:href=".door .handle" attributeName="d" to="M55 35 L55 45" begin="0s" dur="0.4s"/>
   </svg>
 </div>
+}
