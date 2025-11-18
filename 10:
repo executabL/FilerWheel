@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RetroFS</title>
+  <title>filer/WHEEL</title>
   <style>
     /* === THEME === */
     :root { --bg: #f8f8f8; --fg: #000; --accent: #000; --card-bg: #fff; --border: #000; --hover: #eee; --progress: #0a0; }
@@ -14,7 +14,7 @@
     [data-theme="light"] { --bg: #f8f8f8; --fg: #000; --accent: #000; --card-bg: #fff; --border: #000; --hover: #eee; --progress: #0a0; }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--fg); font-family: 'Courier New', monospace; padding: 1.5rem; line-height: 1.6; }
+    body { background: var(--bg); color: var(--fg); font-family: 'CamingoCodeRegular', monospace; padding: 1.5rem; line-height: 1.6; }
     h1 { font-size: 2rem; text-align: center; margin: 1rem 0 2rem; letter-spacing: 2px; }
     .container { max-width: 800px; margin: 0 auto; }
 
@@ -72,7 +72,7 @@
 <body>
 
   <div class="container">
-    <h1>RETROFS</h1>
+    <h1>filer/Wheel</h1>
 
     <div class="controls">
       <input type="checkbox" id="theme" class="trigger">
@@ -181,7 +181,7 @@
 
     // Rest of UI update...
     const updateUI = () => {
-      fetch('/tmp/retrofs.json?' + Date.now())
+      fetch('/tmp/filerwheel.json?' + Date.now())
         .then(r => r.json())
         .then(data => {
           document.getElementById('path-display').textContent = data.path || '/';
@@ -209,3 +209,4 @@
   </script>
 </body>
 </html>
+}
