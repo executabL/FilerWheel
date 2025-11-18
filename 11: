@@ -1,3 +1,4 @@
+{
 #!/usr/bin/env python3
 import json, os, shutil, time, subprocess, threading
 from pathlib import Path
@@ -5,8 +6,8 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import unquote, parse_qs
 
 BASE_DIR = "/storage/emulated/0"
-JSON_FILE = "/tmp/retrofs.json"
-HTML_FILE = "/data/data/com.termux/files/home/retrofs.html"
+JSON_FILE = "/tmp/filer/WHEEL.json"
+HTML_FILE = "/data/data/com.termux/files/home/filer/WHEEL.html"
 PORT = 8080
 
 def trigger_animation(anim_id):
@@ -71,3 +72,4 @@ class Handler(SimpleHTTPRequestHandler):
                     data = part.split(b'\r\n\r\n')[1].rsplit(b'\r\n--', 1)[0]
                     dest = Path(BASE_DIR) / filename
                     dest.write_bytes(data
+                    }
