@@ -97,7 +97,7 @@ class Handler(SimpleHTTPRequestHandler):
 def start_server():
     update_json()
     server = HTTPServer(("127.0.0.1", PORT), Handler)
-    print(f"RetroFS UI: http://127.0.0.1:{PORT}/retrofs.html")
+    print(f"filerwheel UI: http://127.0.0.1:{PORT}/filerwheel.html")
     server.serve_forever()
 
 if __name__ == "__main__":
